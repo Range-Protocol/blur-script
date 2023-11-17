@@ -1,0 +1,15 @@
+{
+  "lien": {
+    "lender": "0x2655E8Fa58261f8A6C61e4a170555B63c331A16D",
+    "borrower":  "0x1c0464Cb35D82c52f292A4eb9f20de3733Eb7CF8",
+    "collection": "0xD3D9ddd0CF0A5F0BFB8f7fcEAe075DF687eAEBaB",
+    "tokenId": 2826,
+    "amount": 272299583974973320,
+    "startTime": 1700042123,
+    "rate": 0,
+    "auctionStartBlock": 18589790,
+    "auctionDuration": 9000
+  },
+  "lienId": 31459,
+  "rate": 0
+}
