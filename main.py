@@ -7,14 +7,14 @@ from web3.middleware import construct_sign_and_send_raw_middleware
 whitelisted_functions = ["refinanceAuction", "startAuction", "seize", "getCurrentDebtByLien",
 	"getRefinancingAuctionRate", "getVaultBalance", "cleanup"]
 
-read_or_write = {
-	"refinanceAuction": "write",
-	"startAuction": "write",
-	"seize": "write",
-	"getCurrentDebtByLien": "read",
-	"getRefinancingAuctionRate": "read",
-	"getVaultBalance": "read",
-	"cleanup": "write"
+requires_calldata = {
+	"refinanceAuction": True,
+	"startAuction": True,
+	"seize": True,
+	"getCurrentDebtByLien": False,
+	"getRefinancingAuctionRate": False,
+	"getVaultBalance": False,
+	"cleanup": False
 }
 
 function_name = sys.argv[1]
@@ -41,7 +41,7 @@ blur_pool_instance = w3.eth.contract(address=blur_pool_address, abi=BLUR_POOL_AB
 nonce = w3.eth.get_transaction_count(account.address)
 
 data = None
-if read_or_write[function_name] == "write":
+if requires_calldata[function_name]:
 	f = open(f"transaction_calldata/{function_name}.json")
 	data = json.load(f)
 unsent_tx = None
@@ -63,7 +63,7 @@ elif function_name == "getRefinancingAuctionRate":
 elif function_name == "getVaultBalance":
 	return_data = blur_pool_instance.functions.balanceOf(vault_address).call() / 10 ** 18
 elif function_name == "cleanup":
-	unsent_tx = blur_pool_instance.functions.cleanUpLiensArray()
+	unsent_tx = vault_instance.functions.cleanUpLiensArray()
 else:
 	raise Exception("function not found")
 
