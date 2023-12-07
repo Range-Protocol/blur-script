@@ -2,19 +2,24 @@ import json
 import sys
 
 from web3 import Web3
+from eth_account.messages import encode_structured_data
+from eth_account import Account
 from web3.middleware import construct_sign_and_send_raw_middleware
 
-whitelisted_functions = ["refinanceAuction", "startAuction", "seize", "getCurrentDebtByLien",
-	"getRefinancingAuctionRate", "getVaultBalance", "cleanup"]
+from liquidate_nft import prepare_liquidate_data
 
-requires_calldata = {
+whitelisted_functions = ["refinanceAuction", "startAuction", "seize", "getCurrentDebtByLien",
+	"getRefinancingAuctionRate", "getVaultBalance", "cleanup", "liquidateNFT"]
+
+requires_read_from_file = {
 	"refinanceAuction": True,
 	"startAuction": True,
 	"seize": True,
 	"getCurrentDebtByLien": False,
 	"getRefinancingAuctionRate": False,
 	"getVaultBalance": False,
-	"cleanup": False
+	"cleanup": False,
+	"liquidateNFT": True
 }
 
 function_name = sys.argv[1]
@@ -22,7 +27,7 @@ if function_name not in whitelisted_functions:
 	raise Exception("function not found")
 
 pk = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-rpc = {"mainnet": "https://eth.llamarpc.com", "localhost": "http://127.0.0.1:8545"}
+rpc = {"mainnet": "https://eth-mainnet.g.alchemy.com/v2/CjYmaEKxlp-_BuTgFt22DeY3YlTQWY8O", "localhost": "http://127.0.0.1:8545"}
 
 w3 = Web3(Web3.HTTPProvider(rpc["mainnet"]))
 account = w3.eth.account.from_key(pk)
@@ -41,7 +46,7 @@ blur_pool_instance = w3.eth.contract(address=blur_pool_address, abi=BLUR_POOL_AB
 nonce = w3.eth.get_transaction_count(account.address)
 
 data = None
-if requires_calldata[function_name]:
+if requires_read_from_file[function_name]:
 	f = open(f"transaction_calldata/{function_name}.json")
 	data = json.load(f)
 unsent_tx = None
@@ -64,6 +69,11 @@ elif function_name == "getVaultBalance":
 	return_data = blur_pool_instance.functions.balanceOf(vault_address).call() / 10 ** 18
 elif function_name == "cleanup":
 	unsent_tx = vault_instance.functions.cleanUpLiensArray()
+elif function_name == "liquidateNFT":
+	eip712Domain = vault_instance.functions.eip712Domain().call()
+	message = encode_structured_data(prepare_liquidate_data(eip712Domain, data))
+	signature = w3.eth.account.sign_message(message, account.key)["signature"].hex()
+	return_data = signature
 else:
 	raise Exception("function not found")
 
