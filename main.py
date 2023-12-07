@@ -1,5 +1,9 @@
 import json
 import sys
+import os
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from web3 import Web3
 from eth_account.messages import encode_structured_data
@@ -26,7 +30,7 @@ function_name = sys.argv[1]
 if function_name not in whitelisted_functions:
 	raise Exception("function not found")
 
-pk = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+pk = os.getenv("PRIV_KEY")
 rpc = {"mainnet": "https://eth-mainnet.g.alchemy.com/v2/CjYmaEKxlp-_BuTgFt22DeY3YlTQWY8O", "localhost": "http://127.0.0.1:8545"}
 
 w3 = Web3(Web3.HTTPProvider(rpc["mainnet"]))
